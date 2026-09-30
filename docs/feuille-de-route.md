@@ -12,8 +12,8 @@ Tenue par `architect`, après chaque série de PR fusionnées. Chaque mise à jo
 
 ## 2. Branches suivantes
 
-| Branche | Issues | Motif du regroupement |
-|---|---|---|
+| Branche | Issues | Motif du regroupement | Dépend de |
+|---|---|---|---|
 
 ## 3. Issues hors plan
 
