@@ -14,13 +14,13 @@ Politique appliquée par la session principale quand elle consulte `architect` o
 
 ## 2. Mécanisme
 
-Le paramètre `model` d'un appel `Agent` l'emporte sur le `model` de la fiche ; l'effort, lui, ne peut pas être passé à l'appel et vient de la fiche (champ `effort`). D'où deux fiches par rôle, au même corps :
+Le paramètre `model` d'un appel `Agent` l'emporte sur le `model` de la fiche ; l'effort, lui, ne peut pas être passé à l'appel et vient de la fiche (champ `effort`), qui prime sur l'effort de la session (documentation Claude Code des sous-agents, champ `effort` : « Overrides the session effort level ») mais n'est pas observable dans le journal (§ 7). D'où deux fiches par rôle, au même corps :
 
-| Fiche | Modèle de la fiche | Effort | `maxTurns` | Usage |
+| Fiche | Modèle servi | Effort | `maxTurns` | Usage |
 |---|---|---|---|---|
 | `architect`, `expert` | `opus` | `medium` | 40 | routine (§ 3) |
 | `architect-approfondi`, `expert-approfondi` | `opus` | `high` | 80 | jugement (§ 3) |
-| `architect-approfondi`, `expert-approfondi` appelées avec `model: "fable"` | Fable | `high` | 80 | cas du § 4 seulement |
+| `architect-approfondi`, `expert-approfondi` appelées avec `model: "fable"` | Fable (fiche : `opus`, l'appel l'emporte) | `high` | 80 | cas du § 4 seulement |
 
 - Les fiches `-approfondi` sont **générées** par `bash .claude/outils/fiches_jumelles.sh` à partir de la fiche de base : seul le frontmatter diffère (nom, description, effort, `maxTurns`). Ne jamais les modifier à la main ; la CI vérifie la concordance (`--verifier`). La liste des rôles dédoublés est la variable `ROLES` du script (**À ADAPTER** : un expert dupliqué y est ajouté).
 - Fable en `xhigh` ou `max` : jamais sans accord explicite du mainteneur (il faudrait alors une troisième fiche, à créer sur décision). Fable en `medium` (fiche de base appelée avec `model: "fable"`) : sur indication explicite du mainteneur seulement.
@@ -84,7 +84,7 @@ Sous le seuil : jugement, sans question au mainteneur.
 
 | Blocage constaté dans le retour | Action | Forme |
 |---|---|---|
-| statut `complet` sans les preuves prévues, ou retour sans bloc « Retour » (plafond de tours probable) | **relance ciblée** | reprise du même agent (`SendMessage`), contexte conservé, même fiche ; statut requalifié `partiel` |
+| statut `complet` sans les preuves prévues, retour marqué partiel par Claude Code (plafond de tours `maxTurns` atteint), ou retour sans bloc « Retour » | **relance ciblée** | reprise du même agent (`SendMessage`), contexte conservé, même fiche ; statut requalifié `partiel` |
 | exploration incomplète en routine (lectures non faites, périmètre non couvert) | **hausse d'effort** | consultation neuve de la fiche `-approfondi`, avec le dossier (§ 5.4) |
 | blocage de raisonnement en jugement, ou critère du § 4.1 | **changement de modèle** | consultation neuve de la fiche `-approfondi` avec `model: "fable"`, avec le dossier |
 | information, source ou mesure manquante | **obtenir l'information ou la preuve** | lancer la mesure, retrouver la source, ou demander au mainteneur |
@@ -100,7 +100,7 @@ Ordre selon la nature du blocage : information → preuve ; exploration → effo
 
 ### 5.3 Modèle indisponible, plafond atteint
 
-Arrêt et question au mainteneur : attendre, ou accepter une consultation Opus `high` dont l'avis porte la mention « rendu sans Fable, à revoir ». Jamais de remplacement silencieux : le journal (§ 7) compare le modèle servi au modèle demandé.
+Arrêt et question au mainteneur : attendre, ou accepter une consultation Opus `high` dont l'avis porte la mention « rendu sans Fable, à revoir ». Jamais de remplacement silencieux : la session principale compare le modèle servi, relevé par le journal (§ 7), au modèle demandé, qu'elle note dans la ligne d'escalade de la PR (le journal ne voit pas le `model` passé à l'appel).
 
 ### 5.4 Dossier d'escalade
 
@@ -132,15 +132,15 @@ Chaque consultation se termine par un bloc « Retour » (fiches `architect` et `
 
 ## 7. Traçabilité
 
-- **Journal local** : le hook `SubagentStop` (`.claude/hooks/journal_agents.sh`) ajoute une ligne JSON par consultation à `.claude/journal-agents.jsonl` (non versionné) : date, agent, identifiant, modèles servis, nombre d'appels au modèle, contexte au dernier appel (tokens d'entrée, cache compris), durée. Il ne mesure ni l'effort (non exposé) ni les tokens de sortie (non fiables dans le transcript). En session cloud, il disparaît avec le conteneur.
+- **Journal local** : le hook `SubagentStop` (`.claude/hooks/journal_agents.sh`) ajoute une ligne JSON par consultation à `.claude/journal-agents.jsonl` (non versionné) : date, agent, identifiant, modèles servis, nombre d'appels au modèle, contexte au dernier appel (tokens d'entrée, cache compris), durée. Il ne mesure ni l'effort (non exposé) ni les tokens de sortie (non fiables dans le transcript). En session cloud, il disparaît avec le conteneur : avant la fin d'une telle session, la session principale colle la sortie de `bash .claude/outils/bilan_journal.sh` dans un commentaire de la PR de la branche de travail.
 - **Bilan** : `bash .claude/outils/bilan_journal.sh` agrège le journal par agent et par modèle.
-- **Trace durable** : chaque escalade (hausse d'effort, Fable, relance, arrêt) est notée par la session principale dans la PR de la branche de travail, une ligne : `fiche / modèle / critère déclenché / statut obtenu / suite`.
+- **Trace durable** : chaque escalade (hausse d'effort, Fable), relance ciblée ou arrêt est noté par la session principale dans la PR de la branche de travail, une ligne : `fiche / modèle / critère déclenché / statut obtenu / suite`.
 - `/usage` donne, sur abonnement, la part de chaque sous-agent ; aucune autre mesure de consommation n'est disponible.
 
 ## 8. Calibration et retour arrière
 
 - **Calibration** : après les dix premières consultations `architect` et `expert` d'un projet, puis à chaque point d'étape d'`architect`, relire le bilan du journal et les lignes d'escalade des PR : part des relances ciblées (fiches trop légères ?), escalades vers Fable et leur apport réel, contexte au dernier appel (lectures trop larges ?). Ajuster les seuils et efforts par un commit `claude:` motivé ; une réorientation durable s'annote dans l'ADR 0001.
-- **Retour au comportement antérieur** (Fable pour tout) : remettre `model: fable` dans `architect.md` et `expert.md`, retirer `effort` et `maxTurns`, relancer le script, ou annuler le commit de fusion de la PR qui a introduit la politique (`git revert -m 1 <sha>`).
+- **Retour au comportement antérieur** (Fable pour tout), sur décision du mainteneur : de préférence, annuler le commit de fusion de la PR qui a introduit la politique (`git revert -m 1 <sha>`), puis rétablir l'ADR 0001 (que l'annulation supprime) annoté « abandonné » et daté ; dans un projet créé depuis le modèle, qui n'a pas ce commit, ou à défaut, à la main : remettre `model: fable` dans `architect.md` et `expert.md`, retirer `effort` et `maxTurns`, vider `ROLES` dans `.claude/outils/fiches_jumelles.sh`, supprimer les fiches `-approfondi`, retirer de `CLAUDE.md` le paragraphe « Routage du modèle et de l'effort », et annoter l'ADR 0001.
 
 ## 9. Adapter la politique à un projet
 
