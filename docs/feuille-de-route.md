@@ -24,3 +24,10 @@ Issues ouvertes non rattachées à une branche, avec la raison.
 | N° | Date | Décision | Où elle est consignée |
 |---|---|---|---|
 | M1 | | | |
+
+## 5. Escalades, relances et arrêts hors branche
+
+Consultations faites hors de toute branche ouverte (`docs/agents/routage.md`, § 7) ; une consultation Fable compte pour la branche suivante.
+
+| Date | Fiche / modèle / critère déclenché / statut obtenu / suite |
+|---|---|

@@ -12,7 +12,7 @@ Travail en cours.
 | `.claude/agents/` | Six sous-agents : `architect` (pilotage), `expert` (fond, à spécialiser), `coder`, `docwriter` (réalisation), `audit`, `app-review` (vérification) |
 | `.claude/agents/*-approfondi.md` | Variantes de jugement d'`architect` et d'`expert` (effort `high`), générées par `.claude/outils/fiches_jumelles.sh` |
 | `docs/agents/routage.md` | Politique de routage du modèle et de l'effort d'`architect` et d'`expert` (ADR 0001) |
-| `.claude/hooks/journal_agents.sh`, `.claude/outils/bilan_journal.sh` | Journal local des consultations de sous-agents (hook `SubagentStop`) et son bilan |
+| `.claude/hooks/journal_agents.sh`, `.claude/outils/bilan_journal.sh` | Journal local des sous-agents terminés (hook `SubagentStop`) et son bilan |
 | `.claude/workflows/circuit-technique.js` | Circuit `coder` → batteries → `audit` léger, une reprise au plus, sans commit ni push |
 | `.claude/settings.json`, `.claude/hooks/` | Permissions, hooks (installation des plugins `mattpocock-skills` et `document-skills`, journal des sous-agents) |
 | `CONTEXT.md` | Glossaire du domaine et de l'organisation |

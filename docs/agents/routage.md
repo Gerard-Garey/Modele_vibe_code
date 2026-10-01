@@ -40,9 +40,9 @@ Le paramètre `model` d'un appel `Agent` l'emporte sur le `model` de la fiche ; 
 | architect | Rédaction d'un ADR **d'architecture** (couches, invariants, contrats) | — | **Fable** (routage initial) | contexte, options écartées, conséquences | décision du mainteneur | ADR proposé |
 | architect | Rédaction d'un ADR d'organisation (Git, processus, outillage) | — | jugement | idem | idem | idem |
 | expert | Validation après audit, sans changement de résultat | — | routine | diff, rapport d'audit, verdict référencé | relance ciblée si une preuve manque | verdict |
-| expert | Validation avec tableau avant / après ; conformité à une source ; spécification ou plan | — | jugement | citation précise (texte, article, paragraphe) ou mesure exécutée ; chaque conclusion marquée vérifiée / hypothèse / non vérifiée | § 4.1 ; deux lectures → § 4.4 | verdict, matrice ou plan complet |
+| expert | Validation avec tableau avant / après (hors résultat final ou verdict) ; conformité à une source ; spécification ou plan | — | jugement | citation précise (texte, article, paragraphe) ou mesure exécutée ; chaque conclusion marquée vérifiée / hypothèse / non vérifiée | § 4.1 ; deux lectures → § 4.4 | verdict, matrice ou plan complet |
 | expert | Nouvelle approche, méthode nouvelle | au moins deux options sans preuve qui départage | jugement | options, apport de chacune, références retrouvées | **arbitrage du mainteneur** ; Fable seulement à sa demande ou par § 4.1 | options décrites |
-| tous | Changement d'un résultat final ou d'un verdict | tableau avant / après | jugement | tableau avant / après, lignes expliquées | Fable **seulement sur décision du mainteneur** | visa |
+| tous | Changement d'un résultat final ou d'un verdict | tableau avant / après | jugement | tableau avant / après, lignes expliquées | Fable **seulement sur décision du mainteneur** | visa du mainteneur |
 
 Mission absente de la matrice (par exemple révision globale, relecture d'une PR, revue de fond avant livraison) : jugement par défaut ; la session principale propose de l'ajouter à la matrice au point d'étape suivant.
 
@@ -51,7 +51,7 @@ Mission absente de la matrice (par exemple révision globale, relecture d'une PR
 ### 4.1 Fable sans demander au mainteneur (liste fermée)
 
 1. **Échec documenté d'Opus `high`** : après la consultation en jugement (et, s'il y a lieu, la relance ciblée), la preuve attendue manque encore **et** le blocage est de raisonnement — ni une information manquante, ni une exploration interrompue (§ 5.1).
-2. **Désaccord entre agents** : expert contre `audit`, deux experts entre eux, ou un avis rendu par un agent qui contredit un ADR accepté (une issue qui propose de modifier un ADR est une issue sensible, § 4.2 : Opus `high` d'abord, ADR 0001, décision 3). Fable **instruit** le désaccord, par une consultation neuve de la fiche `-approfondi` du rôle dont relève la question (le fond à `expert`, la forme du code et les ADR à `architect`), avec le dossier (§ 5.4) ; la décision reste au mainteneur quand `CLAUDE.md` la lui réserve.
+2. **Désaccord entre agents** : expert contre `audit`, deux experts entre eux, ou un avis rendu par un agent qui contredit un ADR accepté alors que la question ne porte pas sur cet ADR (une issue ou une consultation qui propose de le modifier est une issue sensible, § 4.2 : Opus `high` d'abord, ADR 0001, décision 3). Fable **instruit** le désaccord, par une consultation neuve de la fiche `-approfondi` du rôle dont relève la question (le fond à `expert`, la forme du code et les ADR à `architect`), avec le dossier (§ 5.4) ; la décision reste au mainteneur quand `CLAUDE.md` la lui réserve.
 3. **Rédaction d'un ADR d'architecture** (routage initial, § 3).
 
 Tout autre usage de Fable est **proposé** au mainteneur (un message, réponse oui / non), qui peut aussi le demander d'office.
@@ -93,11 +93,11 @@ Sous le seuil : jugement, sans question au mainteneur.
 | information, source ou mesure manquante | **obtenir l'information ou la preuve** | lancer la mesure, retrouver la source, ou demander au mainteneur |
 | décision réservée (visa, deux lectures, approche, source non retrouvée, Fable proposé) | **décision humaine** | question au mainteneur, avec les rapports |
 
-Ordre selon la nature du blocage : information → preuve ; exploration → effort ; raisonnement → modèle. Pas de palier Opus `high` imposé avant Fable quand un critère du § 4.1 est présent d'emblée (en pratique, seul le § 4.1.3, ADR d'architecture, peut l'être).
+Ordre selon la nature du blocage : information → preuve ; exploration → effort ; raisonnement → effort en routine, puis modèle en jugement. Pas de palier Opus `high` imposé avant Fable quand un critère du § 4.1 est présent d'emblée : § 4.1.3 (ADR d'architecture) dès le départ, § 4.1.2 (désaccord) dès qu'il est constaté, même entre consultations de routine.
 
 ### 5.2 Plafonds
 
-- **Par question** : au plus une relance ciblée, une hausse d'effort et une consultation Fable ; ensuite arrêt et compte rendu au mainteneur, statut `revue requise`.
+- **Par question** : au plus une relance ciblée, une hausse d'effort et une consultation Fable ; ensuite arrêt et compte rendu au mainteneur, statut `revue requise` ; l'accord du mainteneur lève le plafond (§ 5.5).
 - **Par branche de travail** : au-delà de **3 consultations Fable** (ADR compris), accord du mainteneur avant chaque nouvelle consultation.
 - **Par consultation** : `maxTurns` de la fiche (40 ou 80). Ce plafond borne les tours, **pas les tokens** ; une réponse courte ne borne pas le raisonnement.
 
@@ -137,13 +137,13 @@ Chaque consultation se termine par un bloc « Retour » (fiches `architect` et `
 
 - **Journal local** : le hook `SubagentStop` (`.claude/hooks/journal_agents.sh`) ajoute une ligne JSON par sous-agent terminé (toutes fiches, pas seulement les consultations) à `.claude/journal-agents.jsonl` (non versionné) : date, agent, identifiant, modèles servis, nombre d'appels au modèle, contexte au dernier appel (tokens d'entrée, cache compris), durée. Il ne mesure ni l'effort (non exposé) ni les tokens de sortie (non fiables dans le transcript). Le transcript est écrit de façon asynchrone et peut ne pas contenir les derniers messages quand le hook s'exécute : appels et contexte au dernier appel sont des minorants possibles. En session cloud, il disparaît avec le conteneur : avant la fin d'une telle session, la session principale colle la sortie de `bash .claude/outils/bilan_journal.sh` dans un commentaire de la PR de la branche de travail.
 - **Bilan** : `bash .claude/outils/bilan_journal.sh` agrège le journal par agent et par modèle. Une reprise (`SendMessage`) ajoute pour le même sous-agent une ligne cumulative (appels, durée attente comprise) : le bilan ne garde que la dernière et compte les reprises.
-- **Trace durable** : chaque escalade (hausse d'effort, Fable), relance ciblée ou arrêt est noté par la session principale dans la PR de la branche de travail, une ligne : `fiche / modèle / critère déclenché / statut obtenu / suite`. Hors de toute branche ouverte (point d'étape entre deux branches, par exemple), la ligne va dans la mise à jour de `docs/feuille-de-route.md` et la consultation compte pour la branche suivante (§ 5.2).
+- **Trace durable** : chaque escalade (hausse d'effort, Fable), relance ciblée ou arrêt est noté par la session principale dans la PR de la branche de travail, une ligne : `fiche / modèle / critère déclenché / statut obtenu / suite`. Hors de toute branche ouverte (point d'étape entre deux branches, par exemple), la ligne va dans la section « Escalades, relances et arrêts hors branche » de `docs/feuille-de-route.md`, et une consultation Fable faite hors branche compte pour la branche suivante (§ 5.2).
 - `/usage` (abonnement) attribue approximativement l'usage récent aux sous-agents (24 h ou 7 jours, poste courant seulement) ; l'export OpenTelemetry est l'autre source, que le modèle ne configure pas.
 
 ## 8. Calibration et retour arrière
 
 - **Calibration** : après les dix premières consultations `architect` et `expert` d'un projet, puis à chaque point d'étape d'`architect`, relire le bilan du journal et les lignes d'escalade des PR : part des relances ciblées (fiches trop légères ?), escalades vers Fable et leur apport réel, contexte au dernier appel (lectures trop larges ?). Ajuster les seuils et efforts par un commit `claude:` motivé ; une réorientation durable s'annote dans l'ADR 0001.
-- **Retour au comportement antérieur** (Fable pour tout), sur décision du mainteneur : de préférence, annuler le commit de fusion de la PR qui a introduit la politique (`git revert -m 1 <sha>`), puis rétablir l'ADR 0001 (que l'annulation supprime) annoté « abandonné » et daté ; dans un projet créé depuis le modèle, qui n'a pas ce commit, ou à défaut, à la main : remettre `model: fable` dans `architect.md` et `expert.md`, retirer `effort` et `maxTurns`, vider `ROLES` dans `.claude/outils/fiches_jumelles.sh`, supprimer les fiches `-approfondi`, retirer de `CLAUDE.md` le paragraphe « Routage du modèle et de l'effort », et annoter l'ADR 0001.
+- **Retour au comportement antérieur** (Fable pour tout), sur décision du mainteneur : de préférence, annuler le commit de fusion de la PR qui a introduit la politique (`git revert -m 1 <sha>`), puis rétablir l'ADR 0001 (que l'annulation supprime) avec une annotation datée « Politique abandonnée le … » (ou `superseded by NNNN` si un nouvel ADR consigne le retour) ; dans un projet créé depuis le modèle, qui n'a pas ce commit, ou à défaut, à la main : remettre `model: fable` dans `architect.md` et `expert.md`, retirer `effort` et `maxTurns`, vider `ROLES` dans `.claude/outils/fiches_jumelles.sh`, supprimer les fiches `-approfondi`, retirer de `CLAUDE.md` le paragraphe « Routage du modèle et de l'effort », et annoter l'ADR 0001.
 
 ## 9. Adapter la politique à un projet
 
