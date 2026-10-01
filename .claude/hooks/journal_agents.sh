@@ -11,7 +11,9 @@
 #  session principale compare au modele demande (non visible du hook, § 5.3).
 #
 #  Ne mesure ni l'effort (non expose dans le transcript) ni les tokens de
-#  sortie (valeurs partielles de streaming dans le transcript).
+#  sortie (valeurs partielles de streaming dans le transcript). Le transcript
+#  est ecrit de facon asynchrone : appels et contexte sont des minorants
+#  possibles.
 #  N'echoue jamais et n'ecrit rien sur la sortie standard : une session sans
 #  Python, ou un transcript illisible, se poursuit sans journal.
 ###############################################################################
