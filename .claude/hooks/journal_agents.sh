@@ -2,7 +2,7 @@
 ###############################################################################
 #  .claude/hooks/journal_agents.sh  --  HOOK SubagentStop DE CLAUDE CODE
 #
-#  Ajoute une ligne JSON par consultation de sous-agent a
+#  Ajoute une ligne JSON par sous-agent termine a
 #  .claude/journal-agents.jsonl (non versionne) : date, agent, identifiant,
 #  modeles servis, nombre d'appels au modele, contexte au dernier appel
 #  (tokens d'entree, cache compris) et duree, lus dans le transcript du
