@@ -10,8 +10,11 @@ Travail en cours.
 |---|---|
 | `CLAUDE.md` | Règles lues par Claude Code à chaque session : Git et GitHub, architecture, changements de résultats, rigueur, sous-agents, circuits, workflows |
 | `.claude/agents/` | Six sous-agents : `architect` (pilotage), `expert` (fond, à spécialiser), `coder`, `docwriter` (réalisation), `audit`, `app-review` (vérification) |
+| `.claude/agents/*-approfondi.md` | Variantes de jugement d'`architect` et d'`expert` (effort `high`), générées par `.claude/outils/fiches_jumelles.sh` |
+| `docs/agents/routage.md` | Politique de routage du modèle et de l'effort d'`architect` et d'`expert` (ADR 0001) |
+| `.claude/hooks/journal_agents.sh`, `.claude/outils/bilan_journal.sh` | Journal local des sous-agents terminés (hook `SubagentStop`) et son bilan |
 | `.claude/workflows/circuit-technique.js` | Circuit `coder` → batteries → `audit` léger, une reprise au plus, sans commit ni push |
-| `.claude/settings.json`, `.claude/hooks/` | Permissions, hook d'installation des plugins (skills `mattpocock-skills`, `document-skills`) |
+| `.claude/settings.json`, `.claude/hooks/` | Permissions, hooks (installation des plugins `mattpocock-skills` et `document-skills`, journal des sous-agents) |
 | `CONTEXT.md` | Glossaire du domaine et de l'organisation |
 | `docs/exigences.md` | Gabarit du cahier des charges |
 | `docs/feuille-de-route.md` | Gabarit de la feuille de route tenue par `architect` |
@@ -28,9 +31,10 @@ Travail en cours.
    - `.claude/workflows/circuit-technique.js` : `BATTERIES` et `ZONES_PROTEGEES` ;
    - `docs/exigences.md`, `CONTEXT.md` ;
    - `.github/workflows/ci.yml` : jobs de tests, à ajouter aux contrôles requis du ruleset.
-3. Retirer les agents inutiles (par ex. `app-review` sans interface) et leurs mentions dans `CLAUDE.md`.
-4. Créer les libellés d'issues (« Use this template » ne les copie pas) : `bash .github/creer_labels.sh OWNER/REPO` — libellés de tri de `docs/agents/triage-labels.md`, plus `bug`, `enhancement` et `documentation`.
-5. Premier travail : demander à `architect` le plan de la première branche de travail.
+3. Adapter les critères de routage du modèle et de l'effort (ci-dessous, « Routage du modèle et de l'effort »).
+4. Retirer les agents inutiles (par ex. `app-review` sans interface) et leurs mentions dans `CLAUDE.md`.
+5. Créer les libellés d'issues (« Use this template » ne les copie pas) : `bash .github/creer_labels.sh OWNER/REPO` — libellés de tri de `docs/agents/triage-labels.md`, plus `bug`, `enhancement` et `documentation`.
+6. Premier travail : demander à `architect` le plan de la première branche de travail.
 
 ## Façon de travailler
 
@@ -41,6 +45,18 @@ Travail en cours.
 - **Les issues ne sont créées qu'avec l'accord du mainteneur** ; les workflows ne commitent, ne poussent et ne créent rien.
 
 Détail : `CLAUDE.md`.
+
+## Routage du modèle et de l'effort
+
+`architect` et `expert` tournent sur Opus par défaut : effort `medium` pour la routine et `high` pour le jugement, Fable réservé à une liste fermée de cas ou à l'accord du mainteneur, avec des plafonds d'escalade (`docs/agents/routage.md`, ADR 0001).
+
+**Cette politique est un point de départ.** Chaque projet créé à partir du modèle peut, et doit, définir ses propres critères d'escalade du modèle et de l'effort selon son domaine, son architecture, ses risques et ses contraintes, puis les réévaluer à mesure qu'il évolue (après les premières consultations réelles, puis à chaque point d'étape d'`architect`).
+
+- **Où** : les critères (matrice, contrats partagés, seuil « macro », plafonds) dans `docs/agents/routage.md` ; l'effort et le plafond de tours de routine dans le frontmatter d'`architect.md` et d'`expert.md` ; les rôles dédoublés, l'effort et le plafond de jugement dans les variables `ROLES`, `EFFORT_APPROFONDI` et `TOURS_APPROFONDI` de `.claude/outils/fiches_jumelles.sh`, puis `bash .claude/outils/fiches_jumelles.sh` pour régénérer les fiches `-approfondi`.
+- **Articulation** : les règles de `CLAUDE.md` priment (visa, décisions réservées au mainteneur, deux lectures d'une source) ; la politique ne fait que choisir la fiche et le modèle d'une consultation.
+- **Vérification** : `bash .claude/outils/fiches_jumelles.sh --verifier` (aussi en CI) ; puis, dans une **session neuve** (les fiches ne sont pas rechargées en cours de session), une consultation de chaque fiche et `bash .claude/outils/bilan_journal.sh`, qui affiche le modèle réellement servi ; les escalades, relances ciblées et arrêts sont notés dans la PR (section « Escalades, relances et arrêts »).
+- **Exemple** : un projet de calcul réglementaire déclare comme contrats partagés sa table de paramètres et son format d'entrée, abaisse le seuil « macro » à une seule couche de calcul touchée, ajoute un expert `regulatory` à `ROLES`, et passe la validation après audit en jugement.
+- **Limites** : un plafond de tours n'est pas un plafond de tokens, une réponse courte ne borne pas le raisonnement, l'effort effectif n'est pas observable dans le journal, et la politique ne supprime pas les angles morts des modèles.
 
 ## Sécurité du dépôt
 
