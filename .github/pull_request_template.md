@@ -8,7 +8,7 @@ Closes #
 
 <!-- « Aucun », ou un tableau avant / après par commit qui change un résultat : grandeur / avant / après / écart / explication, avec le visa. -->
 
-## Consultations escaladées
+## Escalades, relances et arrêts
 
 <!-- « Aucune », ou une ligne par escalade, relance ciblée ou arrêt (docs/agents/routage.md, § 7) : fiche / modèle / critère déclenché / statut obtenu / suite. -->
 
