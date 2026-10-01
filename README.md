@@ -14,7 +14,7 @@ Travail en cours.
 | `docs/agents/routage.md` | Politique de routage du modèle et de l'effort d'`architect` et d'`expert` (ADR 0001) |
 | `.claude/hooks/journal_agents.sh`, `.claude/outils/bilan_journal.sh` | Journal local des consultations de sous-agents (hook `SubagentStop`) et son bilan |
 | `.claude/workflows/circuit-technique.js` | Circuit `coder` → batteries → `audit` léger, une reprise au plus, sans commit ni push |
-| `.claude/settings.json`, `.claude/hooks/` | Permissions, hook d'installation des plugins (skills `mattpocock-skills`, `document-skills`) |
+| `.claude/settings.json`, `.claude/hooks/` | Permissions, hooks (installation des plugins `mattpocock-skills` et `document-skills`, journal des sous-agents) |
 | `CONTEXT.md` | Glossaire du domaine et de l'organisation |
 | `docs/exigences.md` | Gabarit du cahier des charges |
 | `docs/feuille-de-route.md` | Gabarit de la feuille de route tenue par `architect` |
@@ -48,13 +48,13 @@ Détail : `CLAUDE.md`.
 
 ## Routage du modèle et de l'effort
 
-`architect` et `expert` ne tournent plus systématiquement sur Fable : Opus par défaut, effort `medium` pour la routine et `high` pour le jugement, Fable réservé à une liste fermée de cas ou à l'accord du mainteneur, avec des plafonds d'escalade (`docs/agents/routage.md`, ADR 0001).
+`architect` et `expert` tournent sur Opus par défaut : effort `medium` pour la routine et `high` pour le jugement, Fable réservé à une liste fermée de cas ou à l'accord du mainteneur, avec des plafonds d'escalade (`docs/agents/routage.md`, ADR 0001).
 
 **Cette politique est un point de départ.** Chaque projet créé à partir du modèle peut, et doit, définir ses propres critères d'escalade du modèle et de l'effort selon son domaine, son architecture, ses risques et ses contraintes, puis les réévaluer à mesure qu'il évolue (après les premières consultations réelles, puis à chaque point d'étape d'`architect`).
 
 - **Où** : les critères (matrice, contrats partagés, seuil « macro », plafonds) dans `docs/agents/routage.md` ; l'effort et le plafond de tours de routine dans le frontmatter d'`architect.md` et d'`expert.md` ; les rôles dédoublés, l'effort et le plafond de jugement dans les variables `ROLES`, `EFFORT_APPROFONDI` et `TOURS_APPROFONDI` de `.claude/outils/fiches_jumelles.sh`, puis `bash .claude/outils/fiches_jumelles.sh` pour régénérer les fiches `-approfondi`.
 - **Articulation** : les règles de `CLAUDE.md` priment (visa, décisions réservées au mainteneur, deux lectures d'une source) ; la politique ne fait que choisir la fiche et le modèle d'une consultation.
-- **Vérification** : `bash .claude/outils/fiches_jumelles.sh --verifier` (aussi en CI) ; puis, dans une **session neuve** (les fiches ne sont pas rechargées en cours de session), une consultation de chaque fiche et `bash .claude/outils/bilan_journal.sh`, qui affiche le modèle réellement servi ; les escalades sont notées dans la PR (section « Consultations escaladées »).
+- **Vérification** : `bash .claude/outils/fiches_jumelles.sh --verifier` (aussi en CI) ; puis, dans une **session neuve** (les fiches ne sont pas rechargées en cours de session), une consultation de chaque fiche et `bash .claude/outils/bilan_journal.sh`, qui affiche le modèle réellement servi ; les escalades, relances ciblées et arrêts sont notés dans la PR (section « Escalades, relances et arrêts »).
 - **Exemple** : un projet de calcul réglementaire déclare comme contrats partagés sa table de paramètres et son format d'entrée, abaisse le seuil « macro » à une seule couche de calcul touchée, ajoute un expert `regulatory` à `ROLES`, et passe la validation après audit en jugement.
 - **Limites** : un plafond de tours n'est pas un plafond de tokens, une réponse courte ne borne pas le raisonnement, l'effort effectif n'est pas observable dans le journal, et la politique ne supprime pas les angles morts des modèles.
 

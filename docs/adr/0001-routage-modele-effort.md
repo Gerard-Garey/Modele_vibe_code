@@ -9,7 +9,7 @@ date: 2026-09-30
 
 `architect` et `expert` tournaient sur Fable pour toutes leurs missions, sans effort ni plafond de tours fixés (l'effort venait de la session). Les dépôts dérivés du modèle ont montré trois sources de consommation, sans mesure fine disponible : Fable pour des missions routinières (rattachement d'issues, tenue de la feuille de route, rédaction d'issues) ; la lecture imposée au démarrage (tous les ADR, `CONTEXT.md`, la feuille de route entière : jusqu'à environ 1 Mo de texte dans un projet dérivé, mesuré par `wc -c`) ; l'absence de borne à l'exploration. Le mainteneur travaille sur abonnement : la contrainte est la limite d'usage, pas un coût unitaire.
 
-Contraintes techniques (Claude Code 2.1.286, documentation officielle) : le paramètre `model` d'un appel `Agent` l'emporte sur le `model` de la fiche ; l'effort ne peut pas être passé à l'appel, seulement fixé dans la fiche (`effort`) ; un sous-agent lancé ne change ni de modèle ni d'effort ; les fiches ne sont pas rechargées en cours de session (`docs/agents/issue-tracker.md`, constat 3).
+Contraintes techniques (Claude Code 2.1.286, documentation officielle) : le paramètre `model` d'un appel `Agent` l'emporte sur le `model` de la fiche ; l'effort ne peut pas être passé à l'appel de l'outil `Agent`, seulement fixé dans la fiche (`effort`) (l'API des workflows l'accepte : `.claude/workflows/circuit-technique.js`, `effort: 'low'`) ; un sous-agent lancé ne change ni de modèle ni d'effort ; les fiches ne sont pas rechargées en cours de session (`docs/agents/issue-tracker.md`, constat 3).
 
 ## Décision
 
@@ -32,6 +32,7 @@ Arrêtée par le mainteneur le 30 septembre 2026, après entretien (priorités :
 - **Fiches jumelles tenues à la main** : dérive certaine entre les deux corps ; remplacée par une génération contrôlée par la CI.
 - **Fable en `medium` par défaut** : Fable n'étant appelé qu'après filtrage des cas faciles, un passage en `medium` risquerait de gâcher l'unique consultation Fable autorisée par question ; `medium` reste possible sur indication du mainteneur.
 - **Routage par le nombre d'issues ou par la confiance déclarée de l'agent** : signaux complémentaires seulement ; une issue unique à fort impact serait sous-évaluée.
+- **Consultation par un workflow fixant l'effort à l'appel** : un workflow ne se lance que sur commande explicite du mainteneur (`CLAUDE.md`, « Workflows », principe 1) et sert à des circuits, pas à des consultations isolées.
 - **Escalade décidée par le sous-agent** : impossible techniquement (ni modèle ni effort modifiables en cours de consultation, pas d'outil `Agent`) et contraire à la séparation constats / décision.
 
 ## Conséquences
