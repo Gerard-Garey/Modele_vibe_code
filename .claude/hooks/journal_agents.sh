@@ -7,8 +7,8 @@
 #  modeles servis, nombre d'appels au modele, contexte au dernier appel
 #  (tokens d'entree, cache compris) et duree, lus dans le transcript du
 #  sous-agent. Sert a calibrer la politique de routage
-#  (docs/agents/routage.md, § 7 et § 8) et a reperer un modele servi autre
-#  que celui demande.
+#  (docs/agents/routage.md, § 7 et § 8) et a relever le modele servi, que la
+#  session principale compare au modele demande (non visible du hook, § 5.3).
 #
 #  Ne mesure ni l'effort (non expose dans le transcript) ni les tokens de
 #  sortie (valeurs partielles de streaming dans le transcript).
@@ -57,7 +57,9 @@ if chemin and os.path.exists(chemin):
         if d.get("type") != "assistant":
             continue
         m = d.get("message") or {}
-        if m.get("model") and m["model"] not in modeles and not m["model"].startswith("<"):
+        if (m.get("model") or "").startswith("<"):
+            continue  # message <synthetic> : aucun appel au modele
+        if m.get("model") and m["model"] not in modeles:
             modeles.append(m["model"])
         if m.get("id"):
             ids.add(m["id"])

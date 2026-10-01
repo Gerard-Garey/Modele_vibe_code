@@ -33,6 +33,6 @@ print("%-24s %-28s %5s %7s %12s %12s %9s" % ("agent", "modele(s) servi(s)", "n",
 for (a, m), v in sorted(g.items()):
     ctx = [x["contexte_final"] for x in v if x.get("contexte_final") is not None]
     du = [x["duree_s"] for x in v if x.get("duree_s") is not None]
-    print("%-24s %-28s %5d %7d %12s %12s %8ss" % (a, m[:28], len(v), sum(x.get("appels") or 0 for x in v),
-          round(sum(ctx)/len(ctx)) if ctx else "-", max(ctx) if ctx else "-", round(sum(du)/len(du)) if du else "-"))
+    print("%-24s %-28s %5d %7d %12s %12s %9s" % (a, m[:28], len(v), sum(x.get("appels") or 0 for x in v),
+          round(sum(ctx)/len(ctx)) if ctx else "-", max(ctx) if ctx else "-", "%ds" % round(sum(du)/len(du)) if du else "-"))
 PY
