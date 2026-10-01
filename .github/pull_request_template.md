@@ -10,7 +10,7 @@ Closes #
 
 ## Consultations escaladées
 
-<!-- « Aucune », ou une ligne par escalade (docs/agents/routage.md, § 7) : fiche / modèle / critère déclenché / statut obtenu / suite. -->
+<!-- « Aucune », ou une ligne par escalade, relance ciblée ou arrêt (docs/agents/routage.md, § 7) : fiche / modèle / critère déclenché / statut obtenu / suite. -->
 
 ## Contrôles
 
