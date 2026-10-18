@@ -35,7 +35,9 @@ export const meta = {
 //  - Principe 8 : effort 'low' pour les etapes mecaniques ; model non fixe :
 //    chaque agent prend le modele de sa fiche (agentType) : coder sur
 //    Sonnet, ou coder-approfondi sur Opus avec l'option '--approfondi' du
-//    mainteneur, et audit sur Opus (ADR 0002).
+//    mainteneur, et audit sur Opus (ADR 0002). Deduit de l'ordre documente
+//    par Claude Code, non encore mesure dans un workflow : le verifier par
+//    bash .claude/outils/bilan_journal.sh (modele servi) apres un passage.
 //  Le workflow ne propose qu'un message de commit ; il ne l'execute pas.
 //  La copie des fichiers non suivis (mktemp -d, hors depot, tour 1) n'est pas
 //  supprimee par le workflow : son chemin est rendu dans copie_temporaire.
@@ -79,7 +81,10 @@ const LISTE_NON_SUIVIS = 'git status --porcelain -z --untracked-files=all | tr "
 // '76 --approfondi=high', {issue: 76, consigne: '...', approfondi: true,
 // effort: 'high'}. L'option confie l'issue a coder-approfondi (Opus) :
 // decision du mainteneur, qui seul lance le workflow (ADR 0002) ; sans
-// '=high', l'effort est celui de la fiche (medium).
+// '=high', l'effort est celui de la fiche (medium). Une option mal formee
+// (par ex. '--approfondis', '--approfondi=High', option placee apres la
+// consigne, approfondi non booleen, effort sans approfondi) arrete le
+// workflow au lieu d'etre ignoree.
 function lireArgs(a) {
   let v = (typeof a === 'undefined') ? null : a
   if (typeof v === 'string') {
@@ -87,11 +92,15 @@ function lireArgs(a) {
   }
   if (v !== null && typeof v === 'object') {
     const n = String(v.issue === undefined || v.issue === null ? '' : v.issue).match(/\d+/)
+    let invalide = null
+    if (v.approfondi !== undefined && typeof v.approfondi !== 'boolean') invalide = "approfondi doit valoir true ou false"
+    else if (v.effort !== undefined && !(v.approfondi === true && v.effort === 'high')) invalide = "effort n'est admis qu'avec approfondi: true, et seulement 'high'"
     return {
       issue: n ? n[0] : null,
       consigne: v.consigne ? String(v.consigne) : '',
       approfondi: v.approfondi === true,
-      effortHaut: v.approfondi === true && v.effort === 'high'
+      effortHaut: v.approfondi === true && v.effort === 'high',
+      invalide: invalide
     }
   }
   const brut = v === null ? '' : String(v)
@@ -99,7 +108,10 @@ function lireArgs(a) {
   let reste = m ? brut.slice(m[0].length).trim() : ''
   const o = reste.match(/^--approfondi(=high)?(?=\s|$)/)
   if (o) reste = reste.slice(o[0].length).trim()
-  return { issue: m ? m[1] : null, consigne: reste, approfondi: !!o, effortHaut: !!(o && o[1]) }
+  const invalide = /(^|\s)(--|\u2014|\u2013)\s*approfondi/i.test(reste)
+    ? "option '--approfondi' mal formee ou mal placee (attendu, juste apres le numero : '--approfondi' ou '--approfondi=high')"
+    : null
+  return { issue: m ? m[1] : null, consigne: reste, approfondi: !!o, effortHaut: !!(o && o[1]), invalide: invalide }
 }
 const entree = lireArgs(typeof args === 'undefined' ? undefined : args)
 const issue = entree.issue
@@ -413,7 +425,10 @@ async function derouler() {
     return arreter("BATTERIES vide : renseigner les commandes de verification dans .claude/workflows/circuit-technique.js (A ADAPTER)")
   }
   if (!issue) {
-    return arreter("argument sans numero d'issue (attendu : '76' ou '76 consigne')")
+    return arreter("argument sans numero d'issue (attendu : '76', '76 consigne', '76 --approfondi consigne' ou '76 --approfondi=high consigne')")
+  }
+  if (entree.invalide) {
+    return arreter('argument invalide : ' + entree.invalide)
   }
 
   phase('Préparation')

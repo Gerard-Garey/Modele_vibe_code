@@ -26,15 +26,15 @@ EFFORT_APPROFONDI="high"
 TOURS_APPROFONDI="80"
 
 # Parametres de la fiche -approfondi d'un role : modele (vide = celui de la
-# fiche de base), effort, plafond de tours (vide = aucun) et debut de la
-# description. Par defaut, ceux des fiches de jugement d'architect et
+# fiche de base), effort, plafond de tours (vide = celui de la fiche de base,
+# ou aucun si elle n'en a pas) et debut de la description. Par defaut, ceux des fiches de jugement d'architect et
 # d'expert (ADR 0001) ; coder-approfondi : Opus, effort medium (high a
 # l'appel, sur accord du mainteneur), sans plafond de tours (ADR 0002).
 parametres() {
   case "$1" in
     coder)
       MODELE_J="opus"; EFFORT_J="medium"; TOURS_J=""
-      DESC_J="Variante approfondie de \`coder\` (mêmes consignes, modèle Opus, effort medium ; high seulement sur accord du mainteneur, par le paramètre effort de l'appel), pour une tâche de codage de fond, longue ou complexe : d'office en circuits 1 et 2 de \`CLAUDE.md\` ; ailleurs, seulement sur proposition de la session validée par le mainteneur (\`docs/agents/routage.md\`, § 10) ; sinon, invoquer \`coder\`." ;;
+      DESC_J="Variante Opus de \`coder\` (mêmes consignes, effort $EFFORT_J), pour une tâche de codage de fond, longue ou complexe : d'office en circuits 1 et 2 de \`CLAUDE.md\`, ailleurs seulement avec l'accord du mainteneur (\`docs/agents/routage.md\`, § 10) ; sinon, invoquer \`coder\`." ;;
     *)
       MODELE_J=""; EFFORT_J="$EFFORT_APPROFONDI"; TOURS_J="$TOURS_APPROFONDI"
       DESC_J="Variante approfondie de \`$1\` (mêmes consignes, effort $EFFORT_J, $TOURS_J tours au plus), pour les missions de jugement de \`docs/agents/routage.md\` (§ 3) ; appelée avec le modèle Fable (paramètre model de l'appel) dans les seuls cas du § 4.1 ou sur accord du mainteneur ; pour la routine, invoquer \`$1\`." ;;
@@ -104,6 +104,7 @@ generer() {
   printf 'tools: %s\n' "$outils"
   printf 'model: %s\n' "$modele"
   printf 'effort: %s\n' "$EFFORT_J"
+  [ -n "$TOURS_J" ] || TOURS_J="$(champ "$src" maxTurns)"
   [ -z "$TOURS_J" ] || printf 'maxTurns: %s\n' "$TOURS_J"
   printf -- '---\n'
   printf '<!-- Fiche générée par .claude/outils/fiches_jumelles.sh depuis %s.md : ne pas modifier à la main. -->\n' "$role"
