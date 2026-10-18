@@ -32,7 +32,10 @@ export const meta = {
 //  - Principe 4 : au plus une reprise (deux tours coder -> audit).
 //  - Principe 7 : les batteries sont des scripts executes par un agent ; le
 //    script du workflow n'a pas acces au systeme de fichiers.
-//  - Principe 8 : effort 'low' pour les etapes mecaniques ; model non fixe.
+//  - Principe 8 : effort 'low' pour les etapes mecaniques ; model non fixe :
+//    chaque agent prend le modele de sa fiche (agentType), soit coder sur
+//    Sonnet et audit sur Opus (ADR 0002). Le workflow met en oeuvre le
+//    circuit 3 : coder n'y recoit jamais model 'opus' (CLAUDE.md).
 //  Le workflow ne propose qu'un message de commit ; il ne l'execute pas.
 //  La copie des fichiers non suivis (mktemp -d, hors depot, tour 1) n'est pas
 //  supprimee par le workflow : son chemin est rendu dans copie_temporaire.
