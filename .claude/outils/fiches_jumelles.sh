@@ -29,7 +29,7 @@ TOURS_APPROFONDI="80"
 # fiche de base), effort, plafond de tours (vide = celui de la fiche de base,
 # ou aucun si elle n'en a pas) et debut de la description. Par defaut, ceux des fiches de jugement d'architect et
 # d'expert (ADR 0001) ; coder-approfondi : Opus, effort medium (high a
-# l'appel, sur accord du mainteneur), sans plafond de tours (ADR 0002).
+# l'appel, sur accord du mainteneur), sans plafond de tours propre (ADR 0002).
 parametres() {
   case "$1" in
     coder)
