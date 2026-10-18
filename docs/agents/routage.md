@@ -25,7 +25,7 @@ Le paramètre `model` d'un appel `Agent` l'emporte sur le `model` de la fiche. L
 - Les fiches `-approfondi` sont **générées** par `bash .claude/outils/fiches_jumelles.sh` à partir de la fiche de base : seul le frontmatter diffère (nom, description, effort, `maxTurns` et, pour `coder`, le modèle). Ne jamais les modifier à la main ; la CI vérifie la concordance (`--verifier`). La liste des rôles dédoublés est la variable `ROLES` du script (**À ADAPTER** : un expert dupliqué y est ajouté) ; elle comprend aussi `coder`, dont la fiche `-approfondi` a ses propres paramètres (fonction `parametres` du script, § 10).
 - Fable en `xhigh` ou `max` : jamais sans accord explicite du mainteneur (il faudrait alors une troisième fiche, à créer sur décision). Fable en `medium` (fiche de base appelée avec `model: "fable"`) : sur indication explicite du mainteneur seulement.
 - Les modèles sont désignés par **alias** (`opus`, `fable`), qui suivent les nouvelles versions ; le journal (§ 7) note la version effectivement servie.
-- Une fiche modifiée n'est prise en compte que par une **session neuve** (`docs/agents/issue-tracker.md`, constat 3).
+- Une fiche modifiée se vérifie de préférence dans une **session neuve** : le constat 3 de `docs/agents/issue-tracker.md` (pas de rechargement en cours de session) est contredit avec Claude Code 2.1.302, où le rechargement a été constaté (ADR 0002).
 
 ## 3. Matrice
 
@@ -157,7 +157,7 @@ Emplacements réellement lus :
 | frontmatter de `coder.md`, `audit.md`, `docwriter.md`, `app-review.md` | modèle et effort des agents de réalisation et de vérification (§ 10) |
 | `CLAUDE.md`, « Sous-agents » | renvoi à ce fichier ; règles qui priment (§ 5.5, rang 1) ; liste du § 4.1, plafonds du § 5.2 et règles du § 10, recopiés : à tenir identiques |
 
-Ces critères s'articulent avec `CLAUDE.md` sans le remplacer : les décisions qu'il réserve au mainteneur restent les siennes quel que soit le modèle. Vérification : `bash .claude/outils/fiches_jumelles.sh --verifier` (CI), puis, dans une session neuve, une consultation de chaque fiche suivie de `bash .claude/outils/bilan_journal.sh` pour lire le modèle servi.
+Ces critères s'articulent avec `CLAUDE.md` sans le remplacer : les décisions qu'il réserve au mainteneur restent les siennes quel que soit le modèle. Vérification : `bash .claude/outils/fiches_jumelles.sh --verifier` (CI), puis, de préférence dans une session neuve, une consultation de chaque fiche suivie de `bash .claude/outils/bilan_journal.sh` pour lire le modèle servi.
 
 Exemple d'adaptation (projet de calcul réglementaire) : contrats partagés = table des paramètres réglementaires et format d'entrée ; seuil « macro » = une couche de calcul touchée suffit ; un deuxième expert `regulatory` ajouté à `ROLES` ; validation après audit en jugement, parce qu'un écart de conformité y coûte plus qu'une consultation Opus `high`.
 
