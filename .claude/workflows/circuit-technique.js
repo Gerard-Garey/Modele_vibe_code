@@ -82,9 +82,10 @@ const LISTE_NON_SUIVIS = 'git status --porcelain -z --untracked-files=all | tr "
 // effort: 'high'}. L'option confie l'issue a coder-approfondi (Opus) :
 // decision du mainteneur, qui seul lance le workflow (ADR 0002) ; sans
 // '=high', l'effort est celui de la fiche (medium). Une option mal formee
-// (par ex. '--approfondis', '--approfondi=High', option placee apres la
-// consigne, approfondi non booleen, effort sans approfondi) arrete le
-// workflow au lieu d'etre ignoree.
+// (par ex. '--approfondis', '-approfondi', '--approfondi=High', option
+// placee apres la consigne ou en double, approfondi non booleen, effort sans
+// approfondi) arrete le workflow au lieu d'etre ignoree ; une consigne qui
+// doit citer l'option passe par la forme objet.
 function lireArgs(a) {
   let v = (typeof a === 'undefined') ? null : a
   if (typeof v === 'string') {
@@ -108,7 +109,7 @@ function lireArgs(a) {
   let reste = m ? brut.slice(m[0].length).trim() : ''
   const o = reste.match(/^--approfondi(=high)?(?=\s|$)/)
   if (o) reste = reste.slice(o[0].length).trim()
-  const invalide = /(^|\s)(--|\u2014|\u2013)\s*approfondi/i.test(reste)
+  const invalide = /(-|\u2014|\u2013)\s*approfondi/i.test(reste)
     ? "option '--approfondi' mal formee ou mal placee (attendu, juste apres le numero : '--approfondi' ou '--approfondi=high')"
     : null
   return { issue: m ? m[1] : null, consigne: reste, approfondi: !!o, effortHaut: !!(o && o[1]), invalide: invalide }
@@ -118,7 +119,7 @@ const issue = entree.issue
 const consigne = entree.consigne
 // Fiche de coder (ADR 0002) : coder (Sonnet) par defaut, coder-approfondi
 // (Opus) sur l'option du mainteneur ; effort 'high' seulement avec '=high'
-const CODER = entree.approfondi ? 'coder-approfondi' : 'coder'
+const CODER = (entree.approfondi && !entree.invalide) ? 'coder-approfondi' : 'coder'
 const optsCoder = function (label) {
   const o = { label: label, agentType: CODER, schema: SCHEMA_IMPLEMENTATION }
   if (entree.effortHaut) o.effort = 'high'
