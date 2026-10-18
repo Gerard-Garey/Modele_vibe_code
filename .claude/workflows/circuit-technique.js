@@ -84,8 +84,9 @@ const LISTE_NON_SUIVIS = 'git status --porcelain -z --untracked-files=all | tr "
 // '=high', l'effort est celui de la fiche (medium). Une option mal formee
 // (par ex. '--approfondis', '-approfondi', '--approfondi=High', option
 // placee apres la consigne ou en double, approfondi non booleen, effort sans
-// approfondi) arrete le workflow au lieu d'etre ignoree ; une consigne qui
-// doit citer l'option passe par la forme objet.
+// approfondi) arrete le workflow au lieu d'etre ignoree ; un mot compose
+// comme 'non-approfondi' dans la consigne l'arrete aussi. Une consigne qui
+// doit citer l'option ou un tel mot passe par la forme objet.
 function lireArgs(a) {
   let v = (typeof a === 'undefined') ? null : a
   if (typeof v === 'string') {
@@ -130,7 +131,7 @@ const optsCoder = function (label) {
 const rapport = {
   questions_expert: [],
   issue: issue,
-  coder: CODER + (entree.effortHaut ? ' (effort high)' : ''),
+  coder: CODER + ((entree.effortHaut && !entree.invalide) ? ' (effort high)' : ''),
   statut: 'en cours',
   motif_arret: null,
   depot: null,
