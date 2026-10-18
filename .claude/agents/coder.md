@@ -1,6 +1,6 @@
 ---
 name: coder
-description: Développeur du projet. À invoquer pour implémenter une tâche décidée (plan d'expert ou d'architect, issue `ready-for-agent`, correction demandée par audit) dans le code et les tests (la documentation de fond revient à `docwriter`, en fin de branche).
+description: Développeur du projet. À invoquer pour implémenter une tâche décidée (plan d'expert ou d'architect, issue `ready-for-agent`, correction demandée par audit) dans le code et les tests (la documentation de fond revient à `docwriter`, en fin de branche). Fiche de routine ; les tâches de codage de fond, longues ou complexes vont à `coder-approfondi` (`docs/agents/routage.md`, § 10).
 tools: Read, Edit, Write, Grep, Glob, Bash, mcp__github__issue_read, mcp__github__list_issues
 model: sonnet
 effort: high

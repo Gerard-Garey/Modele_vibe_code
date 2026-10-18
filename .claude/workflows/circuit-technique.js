@@ -1,7 +1,7 @@
 export const meta = {
   name: 'circuit-technique',
   description: "Circuit 3 de CLAUDE.md (correction technique) : coder implemente une issue, un agent execute les batteries, audit leger sur le diff, au plus une reprise, arret a tout point de decision. N'ecrit rien dans l'historique : ni commit, ni push, ni regeneration de reference, ni issue.",
-  whenToUse: "Uniquement sur commande explicite du mainteneur, avec en argument le numero d'une issue de correction technique de la branche de travail courante (par ex. '76', ou '76 consigne complementaire'). Jamais de la propre initiative d'une session, d'un agent ou d'un hook. Pas pour une evolution de fond ni pour la revue finale complete avant fusion (regle 10).",
+  whenToUse: "Uniquement sur commande explicite du mainteneur, avec en argument le numero d'une issue de correction technique de la branche de travail courante (par ex. '76', ou '76 consigne complementaire'). Option '--approfondi' apres le numero (ou '--approfondi=high') : l'issue est confiee a coder-approfondi (Opus, effort medium, ou high), ce que le mainteneur decide en la donnant (ADR 0002). Jamais de la propre initiative d'une session, d'un agent ou d'un hook. Pas pour une evolution de fond ni pour la revue finale complete avant fusion (regle 10).",
   phases: [
     { title: 'Préparation', detail: "Etat du depot au lancement : branche, tete, amont, arbre de travail propre" },
     { title: 'Implémentation', detail: "coder implemente l'issue, sans commit, push, regeneration ni issue" },
@@ -33,9 +33,9 @@ export const meta = {
 //  - Principe 7 : les batteries sont des scripts executes par un agent ; le
 //    script du workflow n'a pas acces au systeme de fichiers.
 //  - Principe 8 : effort 'low' pour les etapes mecaniques ; model non fixe :
-//    chaque agent prend le modele de sa fiche (agentType), soit coder sur
-//    Sonnet et audit sur Opus (ADR 0002). Le workflow met en oeuvre le
-//    circuit 3 : coder n'y recoit jamais model 'opus' (CLAUDE.md).
+//    chaque agent prend le modele de sa fiche (agentType) : coder sur
+//    Sonnet, ou coder-approfondi sur Opus avec l'option '--approfondi' du
+//    mainteneur, et audit sur Opus (ADR 0002).
 //  Le workflow ne propose qu'un message de commit ; il ne l'execute pas.
 //  La copie des fichiers non suivis (mktemp -d, hors depot, tour 1) n'est pas
 //  supprimee par le workflow : son chemin est rendu dans copie_temporaire.
@@ -73,8 +73,13 @@ const copieValide = function (v) { return /^(\/|[A-Za-z]:[\\/])/.test(String(v |
 // Fichiers non suivis, un chemin par ligne, sans guillemets ni echappement
 const LISTE_NON_SUIVIS = 'git status --porcelain -z --untracked-files=all | tr "\\0" "\\n" | sed -n "s/^?? //p"'
 
-// Argument : numero d'issue, suivi d'une consigne facultative.
-// Formes acceptees : 76, '76', '#76 consigne', {issue: 76, consigne: '...'}
+// Argument : numero d'issue, option facultative '--approfondi' ou
+// '--approfondi=high', puis consigne facultative.
+// Formes acceptees : 76, '76', '#76 consigne', '76 --approfondi consigne',
+// '76 --approfondi=high', {issue: 76, consigne: '...', approfondi: true,
+// effort: 'high'}. L'option confie l'issue a coder-approfondi (Opus) :
+// decision du mainteneur, qui seul lance le workflow (ADR 0002) ; sans
+// '=high', l'effort est celui de la fiche (medium).
 function lireArgs(a) {
   let v = (typeof a === 'undefined') ? null : a
   if (typeof v === 'string') {
@@ -82,20 +87,37 @@ function lireArgs(a) {
   }
   if (v !== null && typeof v === 'object') {
     const n = String(v.issue === undefined || v.issue === null ? '' : v.issue).match(/\d+/)
-    return { issue: n ? n[0] : null, consigne: v.consigne ? String(v.consigne) : '' }
+    return {
+      issue: n ? n[0] : null,
+      consigne: v.consigne ? String(v.consigne) : '',
+      approfondi: v.approfondi === true,
+      effortHaut: v.approfondi === true && v.effort === 'high'
+    }
   }
   const brut = v === null ? '' : String(v)
   const m = brut.match(/^\s*#?(\d+)\b/)
-  return { issue: m ? m[1] : null, consigne: m ? brut.slice(m[0].length).trim() : '' }
+  let reste = m ? brut.slice(m[0].length).trim() : ''
+  const o = reste.match(/^--approfondi(=high)?(?=\s|$)/)
+  if (o) reste = reste.slice(o[0].length).trim()
+  return { issue: m ? m[1] : null, consigne: reste, approfondi: !!o, effortHaut: !!(o && o[1]) }
 }
 const entree = lireArgs(typeof args === 'undefined' ? undefined : args)
 const issue = entree.issue
 const consigne = entree.consigne
+// Fiche de coder (ADR 0002) : coder (Sonnet) par defaut, coder-approfondi
+// (Opus) sur l'option du mainteneur ; effort 'high' seulement avec '=high'
+const CODER = entree.approfondi ? 'coder-approfondi' : 'coder'
+const optsCoder = function (label) {
+  const o = { label: label, agentType: CODER, schema: SCHEMA_IMPLEMENTATION }
+  if (entree.effortHaut) o.effort = 'high'
+  return o
+}
 
 // Rapport final, complete au fil des phases ; questions pour expert en tete
 const rapport = {
   questions_expert: [],
   issue: issue,
+  coder: CODER + (entree.effortHaut ? ' (effort high)' : ''),
   statut: 'en cours',
   motif_arret: null,
   depot: null,
@@ -412,7 +434,7 @@ async function derouler() {
   // Tour 1
   phase('Implémentation')
   const impl1 = await agent(consigneImplementation(depot.tete, null),
-    { label: 'coder #' + issue, agentType: 'coder', schema: SCHEMA_IMPLEMENTATION })
+    optsCoder(CODER + ' #' + issue))
   if (!impl1) return arreter("coder n'a rien rendu")
   const tour1 = { implementation: impl1, verification: null, audit: null }
   rapport.tours.push(tour1)
@@ -469,7 +491,7 @@ async function derouler() {
   phase('Reprise')
   const aTransmettre = { constats: aCorriger, batteries_en_echec: rouges1 }
   const impl2 = await agent(consigneImplementation(depot.tete, aTransmettre),
-    { label: 'reprise coder #' + issue, agentType: 'coder', schema: SCHEMA_IMPLEMENTATION })
+    optsCoder('reprise ' + CODER + ' #' + issue))
   if (!impl2) return arreter("coder n'a rien rendu a la reprise")
   const tour2 = { implementation: impl2, verification: null, audit: null }
   rapport.tours.push(tour2)
