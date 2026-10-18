@@ -11,7 +11,7 @@ Travail en cours.
 | `CLAUDE.md` | Règles lues par Claude Code à chaque session : Git et GitHub, architecture, changements de résultats, rigueur, sous-agents, circuits, workflows |
 | `.claude/agents/` | Six sous-agents : `architect` (pilotage), `expert` (fond, à spécialiser), `coder`, `docwriter` (réalisation), `audit`, `app-review` (vérification) |
 | `.claude/agents/*-approfondi.md` | Variantes de jugement d'`architect` et d'`expert` (effort `high`), générées par `.claude/outils/fiches_jumelles.sh` |
-| `docs/agents/routage.md` | Politique de routage du modèle et de l'effort d'`architect` et d'`expert` (ADR 0001) |
+| `docs/agents/routage.md` | Politique de routage du modèle et de l'effort : `architect` et `expert` (ADR 0001), agents de réalisation et de vérification (§ 10, ADR 0002) |
 | `.claude/hooks/journal_agents.sh`, `.claude/outils/bilan_journal.sh` | Journal local des sous-agents terminés (hook `SubagentStop`) et son bilan |
 | `.claude/workflows/circuit-technique.js` | Circuit `coder` → batteries → `audit` léger, une reprise au plus, sans commit ni push |
 | `.claude/settings.json`, `.claude/hooks/` | Permissions, hooks (installation des plugins `mattpocock-skills` et `document-skills`, journal des sous-agents) |
@@ -49,6 +49,8 @@ Détail : `CLAUDE.md`.
 ## Routage du modèle et de l'effort
 
 `architect` et `expert` tournent sur Opus par défaut : effort `medium` pour la routine et `high` pour le jugement, Fable réservé à une liste fermée de cas ou à l'accord du mainteneur, avec des plafonds d'escalade (`docs/agents/routage.md`, ADR 0001).
+
+Les agents de réalisation et de vérification ont leur modèle et leur effort fixés par leur fiche (`docs/agents/routage.md`, § 10, ADR 0002) : `coder` sur Sonnet en effort `high`, avec Opus passé à l'appel pour les évolutions et corrections de fond ; `audit` et `docwriter` sur Opus en effort `medium`, la revue finale complète d'`audit` en effort `high` ; `app-review` sur Sonnet en effort `high`.
 
 **Cette politique est un point de départ.** Chaque projet créé à partir du modèle peut, et doit, définir ses propres critères d'escalade du modèle et de l'effort selon son domaine, son architecture, ses risques et ses contraintes, puis les réévaluer à mesure qu'il évolue (après les premières consultations réelles, puis à chaque point d'étape d'`architect`).
 
