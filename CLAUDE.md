@@ -61,6 +61,8 @@ Si un résultat peut être calculé indépendamment de l'interface, il va dans l
 
 Le vocabulaire du projet est défini dans `CONTEXT.md` : l'employer tel quel dans le code, la documentation et les issues.
 
+**Documents LaTeX** : tout document LaTeX du projet part de la charte `docs/latex/charte_graphique.tex` (préambule repris sans modification, corps d'exemple remplacé par le contenu) et emploie ses macros et environnements plutôt qu'une mise en forme ad hoc ; il se compile avec pdfLaTeX.
+
 ## Sous-agents
 
 Six sous-agents de projet (`.claude/agents/`), orchestrés par la session principale. Règle de séparation : **ceux qui écrivent ne vérifient pas, ceux qui vérifient n'écrivent pas**.
