@@ -19,6 +19,7 @@ Travail en cours.
 | `docs/exigences.md` | Gabarit du cahier des charges |
 | `docs/feuille-de-route.md` | Gabarit de la feuille de route tenue par `architect` |
 | `docs/adr/` | Décisions consignées (gabarit `0000-gabarit.md`) |
+| `docs/latex/charte_graphique.tex` | Charte graphique des documents LaTeX (pdfLaTeX) : préambule à reprendre tel quel, corps d'exemple montrant chaque élément une fois |
 | `docs/agents/` | Suivi des issues (GitHub, `gh` ou MCP), libellés de tri, documentation du domaine |
 | `.github/` | Modèles d'issue et de PR, CI minimale, Dependabot |
 
